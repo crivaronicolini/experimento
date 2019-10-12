@@ -54,27 +54,36 @@ class experimento():
     def get_v(var:np.ndarray):
         assert var.ndim == 1
         return un.nominal_values(var)
-    def plotear(self,X, var, fill=True, alpha=0.5, label=None):
-        Xvals = self.get_v(X)
-        Xerr = self.get_e(X)
+    def plotear(self,x, var, fill=True, alpha=0.5, label=None, orden=None):
+        xvals = self.get_v(x)
+        xerr = self.get_e(x)
         varvals = self.get_v(var)
         varerr = self.get_e(var)
-        plt.plot(Xvals, varvals, '.', label=label)
+        plt.plot(xvals, varvals, '.', label=label)
         if fill:
             varmenos = varvals - varerr
             varmas = varvals + varerr
-            plt.fill_between(Xvals, varmenos, varmas, alpha=alpha)
+            plt.fill_between(xvals, varmenos, varmas, alpha=alpha)
         else:
-            plt.errorbar(Xvals, varvals, xerr=Xerr, yerr=varerr, fmt='.')
+            plt.errorbar(xvals, varvals, xerr=xerr, yerr=varerr, fmt='.')
+        if orden:
+            try:
+                z,cov = np.polyfit(xvals, varvals, orden, w=varerr, cov=True)
+            except ValueError:
+                z,cov = np.polyfit(xvals, varvals, orden, cov=True)
+            zerr = np.sqrt(cov[0,0] * np.sqrt(len(varvals)))
+            polinomio = np.poly1d(z)
+            h = np.linspace(min(x),max(x),100)
+            plt.plot(h,polinomio(h),'--r',label=f'({z[0]:.3f} +- {zerr:.3f})')
         if label:
-            plt.loc('best')
-    def ver_todas(self,**kwargs):
-        for archivo in self.archivos:
+            plt.legend(loc='upper left', framealpha=1)
+    def ver_todas(self):
+        for archivo in self.archivos[:2]:
             *vars, x = self.cargar(archivo)
             for var in vars:
                 plt.ion()
                 print(f'ploteando {archivo}')
-                self.plotear(x, var)
+                self.plotear(x, var, orden=2, label='var')
                 plt.title(self.titular(archivo))
                 plt.ioff()
                 plt.show()
