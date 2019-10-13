@@ -91,8 +91,3 @@ if __name__ == '__main__':
     termo.get_archivos(claves=["temp",'csv'])
     termo.ver_todas()
     # x, y, z = termo.cargar(termo.archivos[0])
-
-JASJDSAJDASJD
-asjkdnalskjdnjdnasd
-asdknasldknasd
-
