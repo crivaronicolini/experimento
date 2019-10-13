@@ -93,3 +93,6 @@ if __name__ == '__main__':
     # x, y, z = termo.cargar(termo.archivos[0])
 
 JASJDSAJDASJD
+asjkdnalskjdnjdnasd
+asdknasldknasd
+
