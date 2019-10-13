@@ -23,21 +23,19 @@ import os
 
 class experimento():
     "una clase para agilizar la carga de datos de labo"
-    def __init__(self, dire):
+    def __init__(self, dire, claves=[]):
         if os.path.isabs(dire):
             self.absdire = dire
         else:
             self.absdire = os.path.abspath(dire)
-    def get_archivos(self, claves=[]):
         self.archivos = sorted(os.listdir(self.absdire))
         if claves!=[]:
             self.archivos = [i for i in self.archivos if all(clave in i for clave in claves)]
         else:
             pass
-        return self.archivos
     def cargar(self,archivo):
         arch = os.path.join(self.absdire, archivo)
-        return np.loadtxt(arch, delimiter=',', unpack = True)
+        return np.loadtxt(arch, delimiter=';', unpack = True, comments='$')
     @staticmethod
     def titular(archivo):
         return archivo.split('.')[0].replace('_',' ')
@@ -73,20 +71,20 @@ class experimento():
                 z,cov = np.polyfit(xvals, varvals, orden, cov=True)
             zerr = np.sqrt(cov[0,0] * np.sqrt(len(varvals)))
             polinomio = np.poly1d(z)
-            h = np.linspace(min(x),max(x),100)
+            h = np.linspace(min(xvals),max(xvals),100)
             plt.plot(h,polinomio(h),'--r',label=f'({z[0]:.3f} +- {zerr:.3f})')
         if label:
             plt.legend(loc='upper left', framealpha=1)
-    def ver_todas(self):
-        for archivo in self.archivos[:2]:
-            *vars, x = self.cargar(archivo)
+    def ver_todas(self, orden=None, amnt=0):
+        for archivo in self.archivos[amnt:]:
+            i, x, *vars = self.cargar(archivo)
             for var in vars:
-                plt.ion()
+                # plt.ion()
                 print(f'ploteando {archivo}')
-                self.plotear(x, var, orden=2, label='var')
+                self.plotear(x, var, orden=orden)
                 plt.title(self.titular(archivo))
-                plt.ioff()
-                plt.show()
+                # plt.ioff()
+            plt.show()
 
 if __name__ == '__main__':
     termo = experimento("/home/marco/Documents/fac/labo4/termometria/diados/tempsposta/")
