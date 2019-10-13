@@ -31,8 +31,10 @@ class experimento():
         self.archivos = sorted(os.listdir(self.absdire))
         if claves!=[]:
             self.archivos = [i for i in self.archivos if all(clave in i for clave in claves)]
-        else:
-            pass
+    def __len__(self):
+        return len(self.archivos)
+    def __contains__(self, archivo):
+        return True if archivo in self.archivos else False
     def cargar(self,archivo):
         arch = os.path.join(self.absdire, archivo)
         return np.loadtxt(arch, delimiter=';', unpack = True, comments='$')
@@ -52,7 +54,8 @@ class experimento():
     def get_v(var:np.ndarray):
         assert var.ndim == 1
         return un.nominal_values(var)
-    def plotear(self,x, var, fill=True, alpha=0.5, label=None, orden=None):
+    def plotear(self,x, var, fill:bool =True, alpha:float =0.5, label:str =None,
+            orden:int =None):
         xvals = self.get_v(x)
         xerr = self.get_e(x)
         varvals = self.get_v(var)
@@ -75,7 +78,8 @@ class experimento():
             plt.plot(h,polinomio(h),'--r',label=f'({z[0]:.3f} +- {zerr:.3f})')
         if label:
             plt.legend(loc='upper left', framealpha=1)
-    def ver_todas(self, orden=None, amnt=0):
+    def ver_todas(self, orden:int =None, amnt: int =0):
+        amnt = amnt - len(self.archivos) if amnt > len(self.archivos) else amnt
         for archivo in self.archivos[amnt:]:
             i, x, *vars = self.cargar(archivo)
             for var in vars:
@@ -85,9 +89,21 @@ class experimento():
                 plt.title(self.titular(archivo))
                 # plt.ioff()
             plt.show()
+    def __add__(self, exp):
+        self.archivos = self.archivos + exp.archivos
+        return self.archivos
 
 if __name__ == '__main__':
-    termo = experimento("/home/marco/Documents/fac/labo4/termometria/diados/tempsposta/")
-    termo.get_archivos(claves=["temp",'csv'])
-    termo.ver_todas()
-    # x, y, z = termo.cargar(termo.archivos[0])
+    termo = experimento(
+            "/home/marco/Documents/fac/labo4/termometria/diados/tempsposta/",
+            claves=["temp",'csv'])
+    # termo.ver_todas(amnt=2)
+    if termo.archivos[0] not in termo:
+        print('hola')
+    print(len(termo))
+    vacio = experimento(
+            "/home/marco/Documents/fac/labo4/vacio/",
+            claves=['txt'])
+    print(len(vacio))
+    a = termo + vacio
+    print(a.archivos)
