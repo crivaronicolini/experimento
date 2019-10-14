@@ -19,6 +19,7 @@ metodos
 import matplotlib.pyplot as plt
 from uncertainties import unumpy as un
 import numpy as np
+import pandas as pd
 import os
 
 class experimento():
@@ -92,6 +93,10 @@ class experimento():
     def __add__(self, exp):
         self.archivos = self.archivos + exp.archivos
         return self.archivos
+    def cargar_pd(self,archivo):
+        arch = os.path.join(self.absdire, archivo)
+        return pd.read_casv(arch)
+
 
 if __name__ == '__main__':
     termo = experimento(
