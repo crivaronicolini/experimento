@@ -36,17 +36,21 @@ class experimento():
         return len(self.archivos)
     def __contains__(self, archivo):
         return True if archivo in self.archivos else False
-    def cargar(self,archivo):
+    def cargar(self,archivo, delimiter:str =';'):
         arch = os.path.join(self.absdire, archivo)
-        return np.loadtxt(arch, delimiter=';', unpack = True, comments='$')
+        return np.loadtxt(arch, delimiter=delimiter, unpack = True, comments='$')
     @staticmethod
     def titular(archivo):
         return archivo.split('.')[0].replace('_',' ')
     @staticmethod
-    def set_e(var:np.ndarray, error:float) -> np.ndarray:
-        error = np.ones(np.shape(var))*error
-        var = un.uarray(var, error)
-        return var
+    def set_e(var:np.ndarray, error:float, df=None):
+        if not df.empty:
+            error = np.ones(df[var].shape)*error
+            df[var] = un.uarray(df[var], error)
+        else:
+            error = np.ones(np.shape(var))*error
+            var = un.uarray(var, error)
+            return var
     @staticmethod
     def get_e(var:np.ndarray):
         assert var.ndim == 1
@@ -55,8 +59,11 @@ class experimento():
     def get_v(var:np.ndarray):
         assert var.ndim == 1
         return un.nominal_values(var)
-    def plotear(self,x, var, fill:bool =True, alpha:float =0.5, label:str =None,
+    def plotear(self,x, var, df:pd.core.frame.DataFrame=None, fill:bool =True, alpha:float =0.5, label:str =None,
             orden:int =None):
+        if not df.empty:
+            x = df[x]
+            var = df[var]
         xvals = self.get_v(x)
         xerr = self.get_e(x)
         varvals = self.get_v(var)
@@ -95,8 +102,7 @@ class experimento():
         return self.archivos
     def cargar_pd(self,archivo):
         arch = os.path.join(self.absdire, archivo)
-        return pd.read_casv(arch)
-
+        return pd.read_csv(arch,  delimiter=';', skipinitialspace=True)
 
 if __name__ == '__main__':
     termo = experimento(
