@@ -24,7 +24,7 @@ import os
 
 class experimento():
     "una clase para agilizar la carga de datos de labo"
-    def __init__(self, dire, claves=[]):
+    def __init__(self, dire:str, claves:list =[]):
         if os.path.isabs(dire):
             self.absdire = dire
         else:
@@ -32,16 +32,31 @@ class experimento():
         self.archivos = sorted(os.listdir(self.absdire))
         if claves!=[]:
             self.archivos = [i for i in self.archivos if all(clave in i for clave in claves)]
+
     def __len__(self):
         return len(self.archivos)
+
     def __contains__(self, archivo):
         return True if archivo in self.archivos else False
+
+    def __add__(self, exp):
+        a = experimento('.')
+        a.archivos = self.archivos + exp.archivos
+        return a
+
+    def __sub__(self, exp):
+        s = experimento('.')
+        s.archivos = list( set(self.archivos) - set(exp.archivos) )
+        return s
+
     def cargar(self,archivo, delimiter:str =';'):
         arch = os.path.join(self.absdire, archivo)
         return np.loadtxt(arch, delimiter=delimiter, unpack = True, comments='$')
+
     @staticmethod
     def titular(archivo):
         return archivo.split('.')[0].replace('_',' ')
+
     @staticmethod
     def set_e(var:np.ndarray, error:float, df=None):
         if not df.empty:
@@ -51,14 +66,17 @@ class experimento():
             error = np.ones(np.shape(var))*error
             var = un.uarray(var, error)
             return var
+
     @staticmethod
     def get_e(var:np.ndarray):
         assert var.ndim == 1
         return un.std_devs(var)
+
     @staticmethod
     def get_v(var:np.ndarray):
         assert var.ndim == 1
         return un.nominal_values(var)
+
     def plotear(self,x, var, df:pd.core.frame.DataFrame=None, fill:bool =True, alpha:float =0.5, label:str =None,
             orden:int =None):
         if not df.empty:
@@ -86,6 +104,7 @@ class experimento():
             plt.plot(h,polinomio(h),'--r',label=f'({z[0]:.3f} +- {zerr:.3f})')
         if label:
             plt.legend(loc='upper left', framealpha=1)
+
     def ver_todas(self, orden:int =None, amnt: int =0):
         amnt = amnt - len(self.archivos) if amnt > len(self.archivos) else amnt
         for archivo in self.archivos[amnt:]:
@@ -97,10 +116,8 @@ class experimento():
                 plt.title(self.titular(archivo))
                 # plt.ioff()
             plt.show()
-    def __add__(self, exp):
-        self.archivos = self.archivos + exp.archivos
-        return self.archivos
-    def cargar_pd(self,archivo):
+
+    def cargar_pd(self,archivo:str):
         arch = os.path.join(self.absdire, archivo)
         return pd.read_csv(arch,  delimiter=';', skipinitialspace=True)
 
