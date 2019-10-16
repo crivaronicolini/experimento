@@ -25,29 +25,50 @@ import os
 class experimento():
     "una clase para agilizar la carga de datos de labo"
     def __init__(self, dire:str, claves:list =[]):
+        '''Se inicializa con un directorio donde estan las mediciones.
+        Setea ese directorio y la lista de archivos en el.
+        Opcionalmente las mediciones se pueden filtrar por claves'''
         if os.path.isabs(dire):
             self.absdire = dire
         else:
             self.absdire = os.path.abspath(dire)
         self.archivos = sorted(os.listdir(self.absdire))
         if claves!=[]:
-            self.archivos = [i for i in self.archivos if all(clave in i for clave in claves)]
+            self.archivos = [i for i in self.archivos if all(clave in i.lower() for clave in claves)]
+
+    def _hacer_absarch(self):
+        '''Usado para add y sub, porque si creo un nuevo experimento
+        con ese resultado los archivos deben tener path absoluto.
+        No cambio los archivos originales por si los quiero seguir
+        usando'''
+        self.absarch = [os.path.join(self.absdire, a) for a in self.archivos]
 
     def __len__(self):
-        return len(self.archivos)
+        return list.__len__(self.archivos)
 
     def __contains__(self, archivo):
-        return True if archivo in self.archivos else False
+        # return True if archivo in self.archivos else False
+        return self.archivos.__contains__(archivo)
+
+    def __getitem__(self, archivo):
+        return self.archivos.__getitem__(archivo)
 
     def __add__(self, exp):
         a = experimento('.')
-        a.archivos = self.archivos + exp.archivos
+        self._hacer_absarch()
+        exp._hacer_absarch()
+        a.archivos = self.absarch + exp.absarch
         return a
 
     def __sub__(self, exp):
         s = experimento('.')
-        s.archivos = list( set(self.archivos) - set(exp.archivos) )
+        self._hacer_absarch()
+        exp._hacer_absarch()
+        s.archivos = list( set(self.absarch) - set(exp.absarch) )
         return s
+
+    def __iter__(self):
+        return self.archivos.__iter__()
 
     def cargar(self,archivo, delimiter:str =';'):
         arch = os.path.join(self.absdire, archivo)
@@ -58,14 +79,14 @@ class experimento():
         return archivo.split('.')[0].replace('_',' ')
 
     @staticmethod
-    def set_e(var:np.ndarray, error:float, df=None):
-        if not df.empty:
-            error = np.ones(df[var].shape)*error
-            df[var] = un.uarray(df[var], error)
-        else:
+    def set_e(var, error:float, df: pd.core.frame.DataFrame =None):
+        if df == None:
             error = np.ones(np.shape(var))*error
             var = un.uarray(var, error)
             return var
+        else:
+            error = np.ones(df[var].shape)*error
+            df[var] = un.uarray(df[var], error)
 
     @staticmethod
     def get_e(var:np.ndarray):
@@ -79,7 +100,7 @@ class experimento():
 
     def plotear(self,x, var, df:pd.core.frame.DataFrame=None, fill:bool =True, alpha:float =0.5, label:str =None,
             orden:int =None):
-        if not df.empty:
+        if df != None:
             x = df[x]
             var = df[var]
         xvals = self.get_v(x)
@@ -119,7 +140,7 @@ class experimento():
 
     def cargar_pd(self,archivo:str):
         arch = os.path.join(self.absdire, archivo)
-        return pd.read_csv(arch,  delimiter=';', skipinitialspace=True)
+        return pd.read_csv(arch,  delimiter=',', skipinitialspace=True)
 
 if __name__ == '__main__':
     termo = experimento(
